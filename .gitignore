@@ -91,3 +91,12 @@ $RECYCLE.BIN/
 *.sln
 *.sw?
 
+# Uploaded files
+backend/uploads/
+*.JPG
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
