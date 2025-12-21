@@ -1,0 +1,94 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: multitenant_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Saketh12@
+      POSTGRES_DB: multitenant_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - multitenant_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Flask Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: multitenant_backend
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: multitenant_db
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: Saketh12@
+      JWT_SECRET_KEY: your-super-secret-jwt-key-change-in-production
+      FLASK_ENV: development
+      FLASK_DEBUG: "True"
+      ADMIN_EMAIL: admin@multitenant.com
+      ADMIN_PASSWORD: Admin@12345
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - multitenant_network
+    restart: unless-stopped
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: multitenant_frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:5001
+      REACT_APP_ENV: development
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - multitenant_network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: multitenant_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - multitenant_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  multitenant_network:
+    driver: bridge
