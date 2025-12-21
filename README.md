@@ -240,14 +240,4 @@ Content-Type: application/json
 
 - Development Team: Building the future of scalable SaaS platforms
 
-## 📝 License
 
-This project is proprietary and confidential.
-
-## 🆘 Support
-
-For issues and questions, contact the development team.
-
----
-
-**Built with ❤️ by the Multi-tenant SaaS Team**
