@@ -1,0 +1,333 @@
+MULTITENANT APPLICATION API DOCUMENTATION
+==========================================
+
+BASE URL: http://your-domain/api
+
+All endpoints return JSON responses
+Authentication: Most endpoints require JWT token in Authorization header
+Format: Bearer {token}
+
+==========================================
+ADMIN APIs
+==========================================
+
+POST /api/admin/login
+Purpose: Admin login to authenticate and receive JWT token
+Request Body: email, password
+Response: token, admin details
+
+GET /api/admin/tenants
+Purpose: Get all tenants with pagination (Admin only)
+Query Parameters: page (optional), per_page (optional)
+Response: List of tenants with pagination info
+
+GET /api/admin/tenants/{tenant_id}
+Purpose: Get specific tenant details by ID (Admin only)
+Response: Tenant details
+
+POST /api/admin/tenants
+Purpose: Create new tenant with admin credentials (Admin only)
+Request Body: name, email, admin_name, admin_email, admin_password, phone (optional), slug (optional), metadata (optional)
+Response: Created tenant details
+
+PUT /api/admin/tenants/{tenant_id}
+Purpose: Update existing tenant information (Admin only)
+Request Body: name, email, phone, slug, admin_name, admin_email, admin_password, is_active, subscription_status, metadata (all optional)
+Response: Updated tenant details
+
+DELETE /api/admin/tenants/{tenant_id}
+Purpose: Delete a tenant completely (Admin only)
+Response: Success message
+
+GET /api/admin/dashboard
+Purpose: Get admin dashboard statistics
+Response: Total tenants, active tenants, inactive tenants, total users
+
+==========================================
+TENANT APIs
+==========================================
+
+POST /api/tenant/login
+Purpose: Tenant admin login to authenticate and receive JWT token
+Request Body: email, password
+Response: token, tenant details
+
+GET /api/tenant/profile
+Purpose: Get current tenant profile information
+Response: Tenant profile details
+
+PUT /api/tenant/profile
+Purpose: Update tenant profile information
+Request Body: phone (optional), admin_name (optional), metadata (optional)
+Response: Updated tenant profile
+
+GET /api/tenant/users
+Purpose: Get all users belonging to this tenant with pagination
+Query Parameters: page (optional), per_page (optional), role (optional filter)
+Response: List of users with pagination info
+
+GET /api/tenant/users/{user_id}
+Purpose: Get specific user details by ID
+Response: User details
+
+POST /api/tenant/users
+Purpose: Create new user or employee for the tenant
+Request Body: name, email, phone (optional), role (optional), password (required for users), access_level (optional), profile_data (optional)
+Response: Created user details with temp_password for employees
+
+PUT /api/tenant/users/{user_id}
+Purpose: Update user or employee information
+Request Body: name (optional), phone (optional), role (optional), access_level (optional), is_active (optional), profile_data (optional)
+Response: Updated user details
+
+DELETE /api/tenant/users/{user_id}
+Purpose: Delete user or employee
+Response: Success message
+
+GET /api/tenant/dashboard
+Purpose: Get tenant dashboard statistics
+Response: Total users, active users, inactive users, employees count, regular users count
+
+==========================================
+USER APIs
+==========================================
+
+POST /api/user/login
+Purpose: User login to authenticate and receive JWT token
+Request Body: email, password, tenant_id (optional)
+Response: token, user details
+
+POST /api/user/login/{slug}
+Purpose: User login via tenant slug for SEO-friendly login
+Request Body: email, password
+Response: token, user details, tenant details
+
+POST /api/user/reset-password
+Purpose: Reset password for first-time employee login
+Request Body: user_id, temp_password, new_password
+Response: token, user details
+
+POST /api/user/register
+Purpose: User self-registration for public signup
+Request Body: name, email, password, tenant_id or tenant_slug, phone (optional), profile_data (optional)
+Response: token, user details
+
+GET /api/user/profile
+Purpose: Get current user profile information
+Response: User profile details
+
+PUT /api/user/profile
+Purpose: Update user profile information
+Request Body: name (optional), phone (optional), profile_data (optional)
+Response: Updated user profile
+
+POST /api/user/change-password
+Purpose: Change user password
+Request Body: old_password, new_password
+Response: Success message
+
+==========================================
+EMPLOYEE APIs (RBAC Protected)
+==========================================
+
+GET /api/tenant/employees
+Purpose: Get all employees for the tenant with pagination
+Query Parameters: page (optional), per_page (optional), role (optional filter)
+Permission Required: employees read
+Response: List of employees with pagination info
+
+GET /api/tenant/employees/{employee_id}
+Purpose: Get specific employee details by ID
+Permission Required: employees read
+Response: Employee details
+
+POST /api/tenant/employees
+Purpose: Create new employee with temporary password
+Request Body: name, email, phone (optional), role (employee, manager, or sales_rep), access_level (optional), profile_data (optional)
+Permission Required: employees create
+Response: Created employee details with temp_password
+
+PUT /api/tenant/employees/{employee_id}
+Purpose: Update employee information
+Request Body: name (optional), phone (optional), role (optional, restricted for managers), access_level (optional), is_active (optional, restricted for managers), profile_data (optional)
+Permission Required: employees update
+Response: Updated employee details
+
+DELETE /api/tenant/employees/{employee_id}
+Purpose: Deactivate employee (soft delete)
+Permission Required: employees delete (not allowed for managers)
+Response: Success message
+
+POST /api/tenant/employees/{employee_id}/assign-role
+Purpose: Assign role to employee (Only tenant_admin and super_admin)
+Request Body: role (employee, manager, or sales_rep)
+Permission Required: tenant_admin or super_admin role
+Response: Updated employee details
+
+==========================================
+TEST MANAGEMENT APIs
+==========================================
+
+GET /api/test/tests
+Purpose: Get all active tests for tenant, admin, or user
+Response: List of tests
+
+POST /api/test/tests
+Purpose: Create new test (Tenant or Admin only)
+Request Body: title, description (optional), tenant_id (optional), is_active (optional)
+Response: Created test details
+
+GET /api/test/tests/{test_id}
+Purpose: Get test with all questions
+Response: Test details with questions list
+
+PUT /api/test/tests/{test_id}
+Purpose: Update test information (Tenant or Admin only)
+Request Body: title (optional), description (optional), is_active (optional)
+Response: Updated test details
+
+DELETE /api/test/tests/{test_id}
+Purpose: Delete test (Tenant or Admin only)
+Response: Success message
+
+GET /api/test/tests/{test_id}/questions
+Purpose: Get all questions for a test (Tenant or Admin only)
+Response: List of questions ordered by priority
+
+POST /api/test/tests/{test_id}/questions
+Purpose: Create new question for a test (Tenant or Admin only)
+Request Body: question_text, question_type, section (optional), options (optional), priority_order (optional), is_required (optional), placeholder (optional)
+Response: Created question details
+
+PUT /api/test/questions/{question_id}
+Purpose: Update question (Tenant or Admin only)
+Request Body: question_text (optional), question_type (optional), section (optional), options (optional), priority_order (optional), is_required (optional), placeholder (optional)
+Response: Updated question details
+
+DELETE /api/test/questions/{question_id}
+Purpose: Delete question (Tenant or Admin only)
+Response: Success message
+
+POST /api/test/tests/{test_id}/questions/reorder
+Purpose: Update priority order of questions (Tenant or Admin only)
+Request Body: question_orders array with question_id and priority_order
+Response: Success message
+
+POST /api/test/initialize-default-test
+Purpose: Initialize default Nutrition and Lifestyle Profile test with all questions (Tenant or Admin only)
+Request Body: tenant_id (optional, taken from token if available)
+Response: Created test details
+
+==========================================
+TEST TAKING APIs (User)
+==========================================
+
+POST /api/test/tests/{test_id}/start
+Purpose: Start a test session - creates new test response (User only)
+Response: Test response details with test and questions
+
+POST /api/test/responses/{response_id}/answers
+Purpose: Submit answer to a question (User only)
+Request Body: question_id, answer
+Response: Updated test response
+
+POST /api/test/responses/{response_id}/upload-image
+Purpose: Upload image for test response and mark as completed (User only)
+Request Body: image file (multipart/form-data)
+Response: Updated test response with image_url
+
+POST /api/test/responses/{response_id}/complete
+Purpose: Mark test as completed without image upload (User only)
+Response: Updated test response
+
+GET /api/test/responses/{response_id}
+Purpose: Get specific test response by ID (User only)
+Response: Test response with test details and questions
+
+GET /api/test/responses
+Purpose: Get all test responses for current user (User only)
+Response: List of test responses
+
+GET /api/test/uploads/{filename}
+Purpose: Serve uploaded test images (Public endpoint)
+Response: Image file
+
+==========================================
+ACCESS CONTROL APIs (RBAC)
+==========================================
+
+GET /api/access-control/matrix
+Purpose: Get access matrix for roles
+Query Parameters: role (optional, to filter specific role)
+Response: Access matrix or list of all access matrices
+
+POST /api/access-control/matrix
+Purpose: Create or update access matrix for a role (tenant_admin or super_admin only)
+Request Body: role, permissions object, description (optional), is_active (optional)
+Permission Required: tenant_admin or super_admin role
+Response: Created or updated access matrix
+
+PUT /api/access-control/matrix/{matrix_id}
+Purpose: Update access matrix (tenant_admin or super_admin only)
+Request Body: permissions (optional), description (optional), is_active (optional)
+Permission Required: tenant_admin or super_admin role
+Response: Updated access matrix
+
+POST /api/access-control/initialize-default-matrix
+Purpose: Initialize default access matrix for all roles (tenant_admin or super_admin only)
+Permission Required: tenant_admin or super_admin role
+Response: List of created and updated roles
+
+POST /api/access-control/check-permission
+Purpose: Check if current user has permission for a resource and action
+Request Body: resource, action
+Response: has_permission boolean, role, resource, action
+
+==========================================
+HEALTH CHECK APIs
+==========================================
+
+GET /health
+Purpose: Check API health status
+Response: status, message
+
+GET /
+Purpose: Get API information and endpoint list
+Response: Welcome message with API version and endpoint list
+
+==========================================
+AUTHENTICATION
+==========================================
+
+All protected endpoints require JWT token in Authorization header:
+Authorization: Bearer {your_jwt_token}
+
+Token is obtained from login endpoints:
+- POST /api/admin/login
+- POST /api/tenant/login
+- POST /api/user/login
+
+==========================================
+PERMISSIONS AND ROLES
+==========================================
+
+Roles:
+- super_admin: Full system access (Admin)
+- tenant_admin: Full access to their tenant (Tenant admin)
+- manager: Limited access to manage employees
+- employee: Basic employee access
+- user: Regular user access
+
+Permission Model:
+Resources can have these actions:
+- read: View resource
+- create: Create new resource
+- update: Update existing resource
+- delete: Delete resource
+
+Key Resources:
+- employees: Employee management
+- users: User management
+- tests: Test management
+- access_control: Access control management
+
