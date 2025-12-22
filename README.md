@@ -236,8 +236,3 @@ Content-Type: application/json
 - AI/ML integration for hair analysis
 - Mobile app (Flutter)
 
-## 👥 Team
-
-- Development Team: Building the future of scalable SaaS platforms
-
-
